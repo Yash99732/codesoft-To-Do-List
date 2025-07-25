@@ -1,0 +1,101 @@
+import tkinter as tk
+from tkinter import messagebox, font
+
+class ToDoApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("✨ To-Do List")
+        self.root.geometry("500x600")
+        self.root.config(bg="#F0FFF0")
+
+        self.custom_font = font.Font(family="Helvetica", size=13)
+
+        
+        title = tk.Label(root, text="📝 To-Do List", font=("Helvetica", 20, "bold"), bg="#F0FFF0", fg="#2E8B57")
+        title.pack(pady=10)
+
+        
+        self.task_entry = tk.Entry(root, font=self.custom_font, width=35, bd=3)
+        self.task_entry.pack(pady=10)
+
+        
+        button_frame = tk.Frame(root, bg="#F0FFF0")
+        button_frame.pack(pady=5)
+
+        tk.Button(button_frame, text="➕ Add", command=self.add_task,
+                  bg="#4CAF50", fg="white", font=self.custom_font, width=10).grid(row=0, column=0, padx=5)
+
+        tk.Button(button_frame, text="🗑️ Delete", command=self.delete_task,
+                  bg="#f44336", fg="white", font=self.custom_font, width=10).grid(row=0, column=1, padx=5)
+
+        tk.Button(button_frame, text="✔️ Done", command=self.mark_done,
+                  bg="#2196F3", fg="white", font=self.custom_font, width=10).grid(row=0, column=2, padx=5)
+
+        
+        self.task_listbox = tk.Listbox(
+            root,
+            font=self.custom_font,
+            width=45,
+            height=18,
+            selectbackground="#A5D6A7",
+            selectforeground="black",
+            bg="white",
+            bd=2
+        )
+        self.task_listbox.pack(pady=15)
+
+        
+        self.load_tasks()
+
+    def add_task(self):
+        task = self.task_entry.get().strip()
+        if task:
+            with open("todo.txt", "a", encoding="utf-8") as file:
+                file.write("[ ] " + task + "\n")
+            self.task_entry.delete(0, tk.END)
+            self.load_tasks()
+        else:
+            messagebox.showwarning("Empty Task", "Please enter a task.")
+
+    def delete_task(self):
+        try:
+            selected_index = self.task_listbox.curselection()[0]
+            with open("todo.txt", "r", encoding="utf-8") as file:
+                tasks = file.readlines()
+            tasks.pop(selected_index)
+            with open("todo.txt", "w", encoding="utf-8") as file:
+                file.writelines(tasks)
+            self.load_tasks()
+        except IndexError:
+            messagebox.showwarning("Select Task", "Please select a task to delete.")
+
+    def mark_done(self):
+        try:
+            selected_index = self.task_listbox.curselection()[0]
+            with open("todo.txt", "r", encoding="utf-8") as file:
+                tasks = file.readlines()
+            task = tasks[selected_index]
+            if not task.startswith("[✅]"):
+                tasks[selected_index] = "[✅]" + task[3:]
+                with open("todo.txt", "w", encoding="utf-8") as file:
+                    file.writelines(tasks)
+            self.load_tasks()
+        except IndexError:
+            messagebox.showwarning("Select Task", "Please select a task to mark as done.")
+
+    def load_tasks(self):
+        self.task_listbox.delete(0, tk.END)
+        try:
+            with open("todo.txt", "r", encoding="utf-8") as file:
+                for line in file:
+                    task = line.strip()
+                    self.task_listbox.insert(tk.END, task)
+        except FileNotFoundError:
+            open("todo.txt", "w", encoding="utf-8").close()
+
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ToDoApp(root)
+    root.mainloop()
